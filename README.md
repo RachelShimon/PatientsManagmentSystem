@@ -1,5 +1,4 @@
-markdown
-Copy code
+
 # Patient Management System
 
 ## Overview
