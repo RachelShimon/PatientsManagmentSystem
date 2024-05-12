@@ -1,80 +1,204 @@
+markdown
+Copy code
 # Patient Management System
 
 ## Overview
 
-The Patient Management System is a web application designed to help clinics and medical facilities manage their patient data and appointments more efficiently. It provides features for viewing, searching, and managing patient information, as well as scheduling appointments.
+The Patient Management System is a web application designed to assist clinics and medical facilities in managing patient data and appointments efficiently. It provides features for viewing patients, searching for specific patients, and loading more patient records. The backend of the application is built with ASP.NET Web API, while the frontend is developed using React.js.
 
-## Features
+## Backend
 
-- **View Patients**: Users can see a list of patients with their names, next appointment dates, and appointment types.
-- **Search Patients**: Search for patients by name or ID.
-- **Load More**: Load additional patients when reaching the end of the list.
-- **View Patient Details**: Click on a patient to view more details, such as past appointments and medical history.
+### Technologies Used
 
-## Technologies Used
+- **ASP.NET Web API**: Provides a framework for building RESTful APIs using .NET.
+- **C#**: The primary programming language used in ASP.NET development.
+- **Entity Framework**: An ORM (Object-Relational Mapping) tool used for database interaction.
 
-### Frontend
+### Controllers
 
-- **React.js**: Used for building the user interface and managing state.
-- **Axios**: A promise-based HTTP client for making API requests to the backend.
-- **Bootstrap**: Provides pre-designed UI components and styles for a responsive and visually appealing interface.
+The backend contains a single controller:
 
-### Backend
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web.Http;
+using System.Web.Http.Cors;
+using PatientManagmentSystem.API.Services;
 
-- **Node.js**: A JavaScript runtime environment used to run the server-side logic.
-- **Express.js**: A web application framework for Node.js used to build the RESTful API.
-- **MongoDB**: A NoSQL database used to store patient and appointment data.
-- **Mongoose**: An object data modeling (ODM) library for MongoDB and Node.js, used to define data models and interact with the database.
+namespace PatientManagmentSystem.API.Controllers
+{
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
+    public class PatientsController : ApiController
+    {
+        private readonly PatientService _patientService;
 
+        public PatientsController()
+        {
+            _patientService = new PatientService(new DummyRepository());
+        }
+
+        [HttpGet]
+        public IHttpActionResult GetPatients(string searchTerm = null, int skip = 0, int take = 10)
+        {
+            var patients = _patientService.GetPatients(searchTerm, skip, take);
+            return Ok(patients);
+        }
+    }
+}
+```
+### Services
+The core logic of the application is contained in the PatientService class, which interacts with the repository:
+
+```csharp
+Copy code
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using PatientManagmentSystem.API.Models;
+
+namespace PatientManagmentSystem.API.Services
+{
+    public class PatientService
+    {
+        private readonly IRepository _repository;
+
+        public PatientService(IRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public List<PatientViewModel> GetPatients(string searchTerm = null, int skip = 0, int take = 10)
+        {
+            // Logic for retrieving patients and their details
+        }
+
+        // Other methods for retrieving appointment details
+    }
+}
+```
+## Frontend
+### Technologies Used
+- **React.js:** A JavaScript library for building user interfaces.
+- **Axios:** A promise-based HTTP client for making API requests.
+- **Bootstrap:** A front-end framework for designing responsive and mobile-first websites.
+### Components
+The frontend consists of a single component:
+
+```javascript
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const PatientList = () => {
+    // Component state
+    const [fetchedPatients, setFetchedPatients] = useState([]);
+    const [displayedPatients, setDisplayedPatients] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [skip, setSkip] = useState(0);
+
+    // Backend server URL
+    const serverURL = 'https://localhost:44363';
+
+    // useEffect hooks for fetching data
+    useEffect(() => {
+        fetchPatients();
+    }, [searchTerm, skip]);
+
+    useEffect(() => {
+        setDisplayedPatients(fetchedPatients);
+    }, [fetchedPatients]);
+
+    // Function to fetch patient data
+    const fetchPatients = async () => {
+        try {
+            const response = await axios.get(`${serverURL}/api/patients?searchTerm=${searchTerm}&skip=${skip}`);
+            const newPatients = response.data;
+
+            if (skip > 0) {
+                setFetchedPatients(prevPatients => [...prevPatients, ...newPatients]);
+            } else {
+                setFetchedPatients(newPatients);
+            }
+        } catch (error) {
+            console.error('Error fetching patients:', error);
+        }
+    };
+
+    // Other functions for handling user interactions
+
+    // Return the JSX
+    return (
+        <div className="container mt-4">
+            {/* Form for searching patients */}
+            <form className="container mt-4" onSubmit={handleSearchSubmit}>
+                <div className="input-group">
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        placeholder="Search by name or ID"
+                        list="patients"
+                    />
+                    <datalist id="patients">
+                        {fetchedPatients.map(patient => (
+                            <option key={patient.Id} value={patient.Name} />
+                        ))}
+                    </datalist>
+                    <div className="input-group-append">
+                        <button type="submit" className="btn btn-primary">Search</button>
+                    </div>
+                </div>
+            </form>
+            {/* Table to display patient data */}
+            <table className="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Next / Last Appointment</th>
+                        <th>Appointment Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {displayedPatients.map(patient => (
+                        <tr key={patient.Id}>
+                            <td>{patient.Name}</td>
+                            <td>{patient.NextAppointment}</td>
+                            <td>{patient.AppointmentType}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            {/* Button to load more patients */}
+            {fetchedPatients.length % 10 === 0 && (
+                <button onClick={handleLoadMore} className="btn btn-primary">Load More</button>
+            )}
+        </div>
+    );
+};
+
+export default PatientList;
+```
 ## Getting Started
-
+## Prerequisites
+Node.js installed on your machine
+.NET Framework installed
 ### Installation
+Clone the repository:
+```bash
+git clone https://github.com/RachelShimon/PatientsManagmentSystem.git
+```
 
-1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/your-username/patient-management-system.git
-    cd patient-management-system
-    ```
+# Start the backend server
+Open the backend project through Visual Studio or any other IDE.
 
-2. Install dependencies:
+# Start the frontend development server
+Open the client folder through VS code or any other IDE, and do npm i and then npm run build and npm start
 
-    ```bash
-    # Backend dependencies
-    cd backend
-    npm install
 
-    # Frontend dependencies
-    cd ../frontend
-    npm install
-    ```
 
-3. Set up environment variables:
-   
-    - Create a `.env` file in both the `backend` and `frontend` directories and define the necessary environment variables as described in the previous section.
 
-4. Run the application:
 
-    ```bash
-    # Start the backend server
-    cd backend
-    npm start
-
-    # Start the frontend development server
-    cd ../frontend
-    npm start
-    ```
-
-5. Open your web browser and go to [http://localhost:3000](http://localhost:3000) to access the Patient Management System.
-
-## Explanation
-
-The Patient Management System is designed to provide medical facilities with a user-friendly interface for managing patient information and appointments. The frontend is built with React.js, a popular JavaScript library for building user interfaces. It allows for dynamic rendering of patient data and seamless interaction with the backend API.
-
-The backend, built with Node.js and Express.js, serves as the API layer to handle requests from the frontend. It interacts with a MongoDB database to store and retrieve patient data, leveraging the Mongoose library for simplified database operations.
-
-The use of MongoDB provides flexibility in managing unstructured patient data, while Mongoose helps maintain consistency and structure in the database schema.
-
-Overall, the Patient Management System offers an intuitive and efficient solution for clinics and medical facilities to manage their patient records and appointments effectively.
 
 
