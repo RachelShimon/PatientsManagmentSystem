@@ -196,7 +196,10 @@ Open the backend project through Visual Studio or any other IDE.
 Open the client folder through VS code or any other IDE, and do npm i and then npm run build and npm start
 
 
-
+## Additional realizations that I haven't had time to realize or I'm in the middle of realizing -
+```
+https://docs.google.com/document/d/1Jueudh_Btb_UZqAC5qxCI-wrNsILMsb1a28HoUXPlPo/
+```
 
 
 
